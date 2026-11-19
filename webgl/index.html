@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111d">
+  <title>Chase — WebGL Edition</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game" aria-label="Chase 3D game rendered with WebGL 2"></canvas>
+    <section id="menu" class="panel">
+      <p class="eyebrow">BROWSER EDITION · WEBGL 2.0</p>
+      <h1>CHASE</h1>
+      <p class="intro">A 3D multiplayer-inspired pursuit game. Explore the arena, evade the chaser, and tag your opponents.</p>
+      <button id="start">START GAME</button>
+      <p class="controls">WASD move <span>·</span> Mouse look <span>·</span> Shift sprint <span>·</span> Esc pause</p>
+      <p class="note">This browser build currently runs a local match with AI opponents. The original TCP/Kryo multiplayer server is preserved separately.</p>
+    </section>
+    <header id="hud" hidden>
+      <div><small>ROLE</small><strong id="role">RUNNER</strong></div>
+      <div><small>SCORE</small><strong id="score">0</strong></div>
+      <div><small>TIME</small><strong id="time">02:00</strong></div>
+      <div class="right"><small>OPPONENTS</small><strong id="opponents">4</strong></div>
+    </header>
+    <div id="crosshair" hidden><i></i><b></b></div>
+    <div id="toast" aria-live="polite"></div>
+    <section id="pause" class="panel" hidden><p class="eyebrow">MATCH PAUSED</p><h2>Take a breath.</h2><button id="resume">RESUME</button><button id="restart" class="secondary">RESTART</button></section>
+    <footer>CHASE THE GAME <span>·</span> WEBGL 2.0</footer>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
