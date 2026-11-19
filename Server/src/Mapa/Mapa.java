@@ -24,7 +24,15 @@ public class Mapa {
 
 		Random r = new Random();
 
-		int broj_pozicii = Math.min(30, x_size * y_size);
+		int slobodni_polinja = 0; // polinja sto ne se veke pozicija za igrac
+		for (int[] red : mapa) {
+			for (int pole : red) {
+				if (pole != 9) {
+					slobodni_polinja++;
+				}
+			}
+		}
+		int broj_pozicii = Math.min(30, slobodni_polinja);
 		for (int i = 0; i < broj_pozicii; i++) { // random polozbi za igraci, sekoja na razlicno pole
 			int lokacija_x;
 			int lokacija_y;

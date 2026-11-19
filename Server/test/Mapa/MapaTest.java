@@ -35,4 +35,12 @@ public class MapaTest {
         mapa.generiraj();
         assertEquals(16, mapa.igraci_pozicii.size());
     }
+
+    @Test(timeout = 5000)
+    public void generatingAgainOnAFullMapTerminates() {
+        Mapa mapa = new Mapa(4, 4, 0);
+        mapa.generiraj();
+        mapa.generiraj();
+        assertEquals(16, mapa.igraci_pozicii.size());
+    }
 }
