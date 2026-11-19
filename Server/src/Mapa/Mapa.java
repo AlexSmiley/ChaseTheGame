@@ -24,9 +24,14 @@ public class Mapa {
 
 		Random r = new Random();
 
-		for (int i = 0; i < 30; i++) { // 10 random polozbi za igraci
-			int lokacija_x = r.nextInt(mapa.length);
-			int lokacija_y = r.nextInt(mapa[0].length);
+		int broj_pozicii = Math.min(30, x_size * y_size);
+		for (int i = 0; i < broj_pozicii; i++) { // random polozbi za igraci, sekoja na razlicno pole
+			int lokacija_x;
+			int lokacija_y;
+			do {
+				lokacija_x = r.nextInt(mapa.length);
+				lokacija_y = r.nextInt(mapa[0].length);
+			} while (mapa[lokacija_x][lokacija_y] == 9);
 			mapa[lokacija_x][lokacija_y] = 9;
 			igraci_pozicii.add(new Koordinati(lokacija_x, lokacija_y));
 		}
@@ -50,7 +55,9 @@ public class Mapa {
 					} else {
 						pocetna_x--;
 					}
-					mapa[pocetna_x][pocetna_y] = 2;
+					if (mapa[pocetna_x][pocetna_y] != 9) {
+						mapa[pocetna_x][pocetna_y] = 2;
+					}
 				}
 				if (random == 1 && pocetna_y != krajna_y) {
 					if (pocetna_y < krajna_y) {
@@ -58,7 +65,9 @@ public class Mapa {
 					} else {
 						pocetna_y--;
 					}
-					mapa[pocetna_x][pocetna_y] = 2;
+					if (mapa[pocetna_x][pocetna_y] != 9) {
+						mapa[pocetna_x][pocetna_y] = 2;
+					}
 				}
 			}
 		}

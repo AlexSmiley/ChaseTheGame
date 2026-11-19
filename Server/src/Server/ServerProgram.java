@@ -22,6 +22,12 @@ public class ServerProgram extends Listener {
     static Mapa mapa;
 
     public static void main(String [] args) {
+        if (!start()) {
+            System.exit(1);
+        }
+    }
+
+    static boolean start() {
         server = new Server(5000, 5000);
         server.getKryo().register(PacketUpdateX.class);
         server.getKryo().register(PacketUpdateY.class);
@@ -40,18 +46,19 @@ public class ServerProgram extends Listener {
         server.getKryo().register(java.util.ArrayList.class);
         server.getKryo().register(int[][].class);
         server.getKryo().register(int[].class);
-        try {
-            server.bind(port, port);
-        } catch (IOException ex) {
-            Logger.getLogger(ServerProgram.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        server.start();
-        server.addListener(new ServerProgram());
         mapa = new Mapa(20, 20, 100);
         mapa.generiraj();
         mapa.pecati_matrica();
+        server.addListener(new ServerProgram());
+        try {
+            server.bind(port, port);
+        } catch (IOException ex) {
+            Logger.getLogger(ServerProgram.class.getName()).log(Level.SEVERE, "Could not bind TCP/UDP port " + port, ex);
+            return false;
+        }
+        server.start();
         System.out.println("The server is ready");
-
+        return true;
     }
 
     @Override
@@ -83,9 +90,25 @@ public class ServerProgram extends Listener {
 
     @Override
     public void received(Connection c, Object o) {
+        // KryoNet stops its update thread when a listener throws, which would end the game for every client.
+        try {
+            handle(c, o);
+        } catch (RuntimeException ex) {
+            Logger.getLogger(ServerProgram.class.getName()).log(Level.WARNING, "Dropped a packet from connection " + c.getID(), ex);
+        }
+    }
+
+    private void handle(Connection c, Object o) {
+        Player sender = players.get(c.getID());
+        if (sender == null) {
+            return;
+        }
         if (o instanceof PacketUpdateX) {
             PacketUpdateX packet = (PacketUpdateX) o;
-            players.get(c.getID()).x = packet.x;
+            if (!isFinite(packet.x)) {
+                return;
+            }
+            sender.x = packet.x;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
@@ -93,57 +116,82 @@ public class ServerProgram extends Listener {
 
         } else if (o instanceof PacketUpdateY) {
             PacketUpdateY packet = (PacketUpdateY) o;
-            players.get(c.getID()).y = packet.y;
+            if (!isFinite(packet.y)) {
+                return;
+            }
+            sender.y = packet.y;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
 
         } else if (o instanceof PacketUpdateZ) {
             PacketUpdateZ packet = (PacketUpdateZ) o;
-            players.get(c.getID()).z = packet.z;
+            if (!isFinite(packet.z)) {
+                return;
+            }
+            sender.z = packet.z;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
 
         } else if (o instanceof PacketUpdateCamPitch) {
             PacketUpdateCamPitch packet = (PacketUpdateCamPitch) o;
-            players.get(c.getID()).camPitch = packet.camPitch;
+            if (!isFinite(packet.camPitch)) {
+                return;
+            }
+            sender.camPitch = packet.camPitch;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
 
         } else if (o instanceof PacketUpdateCamYaw) {
             PacketUpdateCamYaw packet = (PacketUpdateCamYaw) o;
-            players.get(c.getID()).camYaw = packet.camYaw;
+            if (!isFinite(packet.camYaw)) {
+                return;
+            }
+            sender.camYaw = packet.camYaw;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
 
         } else if (o instanceof Chase) {
             Chase packet = (Chase) o;
-            players.get(c.getID()).chase = packet.chase;
+            sender.chase = packet.chase;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
 
         } else if (o instanceof Nickname) {
             Nickname packet = (Nickname) o;
-            players.get(c.getID()).nickname = packet.nickname;
+            sender.nickname = packet.nickname;
 
             packet.id = c.getID();
             server.sendToAllExceptUDP(c.getID(), packet);
         } else if (o instanceof Faten) {
             Faten packet = (Faten) o;
-            players.get(packet.id).score += packet.id_score;
-            players.get(packet.id2).score += packet.id2_score;
-
-            packet.id_score=players.get(packet.id).score;
-            packet.id2_score=players.get(packet.id2).score;
-            
-            
+            Player other = players.get(packet.id);
+            if (packet.id2 != c.getID() || other == null || other == sender
+                    || !isCatchOutcome(packet.id_score, packet.id2_score)) {
+                return;
+            }
+            other.score += packet.id_score;
+            sender.score += packet.id2_score;
+            packet.id_score = other.score;
+            packet.id2_score = sender.score;
             server.sendToAllTCP(packet);
 
         }
+    }
+
+    private static boolean isFinite(float value) {
+        return !Float.isNaN(value) && !Float.isInfinite(value);
+    }
+
+    // The only score changes a client reports for a catch: same role, sender caught the other, the other caught the sender.
+    private static boolean isCatchOutcome(int otherScore, int senderScore) {
+        return (otherScore == -2 && senderScore == -2)
+                || (otherScore == -1 && senderScore == 2)
+                || (otherScore == 2 && senderScore == -1);
     }
 
     @Override
